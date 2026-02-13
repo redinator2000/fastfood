@@ -9,14 +9,14 @@ namespace ff
 namespace impl
 {
     struct Unique_food_Vtable { virtual void dont_instantiate() = 0; };
-    template <typename Tgeneral, typename Data>
+    template <typename Chef, typename Data>
     const Unique_food_Vtable * unique_food_vtable_ripper()
     {
-        return static_cast<Unique_food_Vtable *>(vtable_ripper<Unique_food<Tgeneral, Data>>());
+        return static_cast<Unique_food_Vtable *>(vtable_ripper<Unique_food<Chef, Data>>());
     }
 } // namespace impl
 
-template <typename Tgeneral>
+template <typename Chef>
 class Unique_Flat
 {
 private:
@@ -28,13 +28,13 @@ private:
         {}
 public:
     template <typename Data>
-    Unique_Flat(Unique_food<Tgeneral, Data> && ts) :
-    Unique_Flat(impl::unique_food_vtable_ripper<Tgeneral, Data>(), ts.release_data())
+    Unique_Flat(Unique_food<Chef, Data> && ts) :
+    Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), ts.release_data())
         {}
 
     template <typename Data>
     bool has_alternative() const
-        { return unique_food_vtable == impl::unique_food_vtable_ripper<Tgeneral, Data>(); }
+        { return unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>(); }
     template <Data_Empty Data>
     Data * get_data()
     {
@@ -76,7 +76,7 @@ public:
     {
         if(data_alias)
         {
-            reference_Unique_Flat_to_Tgeneral<Tgeneral>(this)->clear_data();
+            reference_Unique_Flat_to_Chef<Chef>(this)->clear_data();
             assert(data_alias == 0);
         }
     }
@@ -86,15 +86,15 @@ public:
     Unique_Flat& operator=(Unique_Flat && other) noexcept = default;
 };
 
-template <typename Tgeneral>
-Tgeneral * reference_Unique_Flat_to_Food_Interface(Unique_Flat<Tgeneral> * tf)
+template <typename Chef>
+Chef * reference_Unique_Flat_to_Chef(Unique_Flat<Chef> * tf)
 {
-    return reinterpret_cast<Tgeneral *>(tf);
+    return reinterpret_cast<Chef *>(tf);
 }
-template <typename Tgeneral>
-const Tgeneral * reference_Unique_Flat_to_Tgeneral(const Unique_Flat<Tgeneral> * tf)
+template <typename Chef>
+const Chef * reference_Unique_Flat_to_Chef(const Unique_Flat<Chef> * tf)
 {
-    return reinterpret_cast<Tgeneral *>(tf);
+    return reinterpret_cast<const Chef *>(tf);
 }
 
 }; // namespace ff

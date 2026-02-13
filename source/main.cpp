@@ -13,9 +13,9 @@ private:
 
     uint64_t find_or_insert_alias(ff::Unique_Flat<Chef> tsf)
     {
-        const Chef * itw = ff::reference_Unique_Flat_to_Food_Interface(&tsf);
+        const Chef * itw = ff::reference_Unique_Flat_to_Chef(&tsf);
         for(uint64_t a = 0; a < flattened.size(); a++)
-            if(itw->equals_Tinterface(ff::reference_Unique_Flat_to_Food_Interface(&flattened[a])))
+            if(itw->equals_Tinterface(ff::reference_Unique_Flat_to_Chef(&flattened[a])))
                 return a;
         flattened.push_back(std::move(tsf));
         return flattened.size() - 1;
@@ -60,11 +60,11 @@ template <typename Chef, typename Data>
 Tile_ID tile_id = tile_id_uninitialized;
 
 Tile_ID register_tile_id_highest_used = 0;
-template <typename Data>
+template <typename Chef, typename Data>
 void register_tile_id()
 {
     assert((tile_id<Chef, Data> == tile_id_uninitialized));
-    tile_id<Chef, Data> = highest_used++;
+    tile_id<Chef, Data> = register_tile_id_highest_used++;
 }
 
 // userspace i guess
@@ -72,7 +72,7 @@ void register_tile_id()
 template <typename Data>
 struct My_Chef_Implement;
 
-struct My_Chef : public ff::Food_Interface
+struct My_Chef : public ff::Chef_Base
 {
     virtual Tile_ID id_get() const = 0;
 
@@ -83,15 +83,8 @@ struct My_Chef : public ff::Food_Interface
     using Implement = My_Chef_Implement<Data>;
 };
 
-template <typename Chef, typename Data>
-struct Chef_Implment : public Chef
-{
-    virtual const Data * get_data() const = 0;
-    virtual Data * get_data() = 0;
-}
-
 template <typename Data>
-struct My_Chef_Implement : public My_Chef
+struct My_Chef_Implement : public ff::Chef_Implement<My_Chef, Data>
 {
     Tile_ID id_get() const override
     {
@@ -183,30 +176,28 @@ bool blender_test(Args&&... args)
     printf("testing id:%ld name:%s\n", tile_id<Chef, Data>, Data::name());
     ff::Unique_food<Chef, Data> sign_strong = ff::make_Unique_food<Chef, Data>(std::forward<Args>(args)...);
     ff::Unique_food<Chef, Data> sign_moved = std::move(sign_strong);
-    ff::Weak_food<Chef, Data> sign_weak = sign_moved.as_Weak_food();
+    [[maybe_unused]] ff::Weak_food<Chef, Data> sign_weak = sign_moved.as_Weak_food();
     ff::Unique_Flat<Chef> flat = ff::Unique_Flat<Chef>(std::move(sign_moved));
-    const IUser * itw = ff::reference_Unique_Flat_to_Food_Interface(&flat);
+    const My_Chef * itw = ff::reference_Unique_Flat_to_Chef(&flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
     return true;
 }
 
 int main()
 {
-    ID_map<IUser> id_map;
+    register_tile_id<My_Chef, tiles::Water>();
+    register_tile_id<My_Chef, tiles::Stone>();
+    register_tile_id<My_Chef, tiles::Switch>();
+    register_tile_id<My_Chef, tiles::Piano>();
+    register_tile_id<My_Chef, tiles::Sign>();
+    register_tile_id<My_Chef, tiles::Tracker_Toy>();
 
-    id_map.register_tile_id<tiles::Water>();
-    id_map.register_tile_id<tiles::Stone>();
-    id_map.register_tile_id<tiles::Switch>();
-    id_map.register_tile_id<tiles::Piano>();
-    id_map.register_tile_id<tiles::Sign>();
-    id_map.register_tile_id<tiles::Tracker_Toy>();
-
-    assert((blender_test<IUser, tiles::Water>()));
-    assert((blender_test<IUser, tiles::Stone>()));
-    assert((blender_test<IUser, tiles::Switch>()));
-    assert((blender_test<IUser, tiles::Piano>()));
-    assert((blender_test<IUser, tiles::Sign>()));
-    assert((blender_test<IUser, tiles::Tracker_Toy>(4)));
+    assert((blender_test<My_Chef, tiles::Water>()));
+    assert((blender_test<My_Chef, tiles::Stone>()));
+    assert((blender_test<My_Chef, tiles::Switch>()));
+    assert((blender_test<My_Chef, tiles::Piano>()));
+    assert((blender_test<My_Chef, tiles::Sign>()));
+    assert((blender_test<My_Chef, tiles::Tracker_Toy>(4)));
 
     printf("ok!\n");
 }
