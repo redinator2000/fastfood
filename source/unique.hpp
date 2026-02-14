@@ -26,7 +26,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
         { return Weak_const_food<Chef, Data>(); }
     T_Data_Alias release_data() override
         { return 0; }
-    void clear_data() override
+    void delete_data() override
         {}
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;
@@ -58,7 +58,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
     }
     T_Data_Alias release_data() override
         { return data_alias; }
-    void clear_data() override
+    void delete_data() override
         { data_alias = 0; }
 
     Weak_const_food<Chef, Data> as_Weak_const_food()
@@ -81,7 +81,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
 
     T_Data_Alias release_data() override
         { return reinterpret_cast<T_Data_Alias>(data.release()); }
-    void clear_data() override
+    void delete_data() override
         { data.reset(); }
 
     Weak_const_food<Chef, Data> as_Weak_const_food()

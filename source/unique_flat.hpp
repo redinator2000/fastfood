@@ -39,44 +39,44 @@ public:
     Data * get_data_mut()
     {
         assert(has_alternative<Data>());
-        return static_cast<Data *>(&data_alias);
+        return reinterpret_cast<Data *>(&data_alias);
     }
     template <Data_Empty Data>
     const Data * get_data() const
     {
         assert(has_alternative<Data>());
-        return static_cast<Data *>(&data_alias);
+        return reinterpret_cast<Data *>(&data_alias);
     }
     template <Data_Trivial Data>
     Data * get_data_mut()
     {
         assert(has_alternative<Data>());
-        return static_cast<Data *>(&data_alias);
+        return reinterpret_cast<Data *>(&data_alias);
     }
     template <Data_Trivial Data>
     const Data * get_data() const
     {
         assert(has_alternative<Data>());
-        return static_cast<Data *>(&data_alias);
+        return reinterpret_cast<Data *>(&data_alias);
     }
     template <Data_Dynamic Data>
     Data * get_data_mut()
     {
         assert(has_alternative<Data>());
-        return static_cast<Data *>(data_alias);
+        return reinterpret_cast<Data *>(data_alias);
     }
     template <Data_Dynamic Data>
     const Data * get_data() const
     {
         assert(has_alternative<Data>());
-        return static_cast<Data *>(data_alias);
+        return reinterpret_cast<Data *>(data_alias);
     }
 
     ~Unique_Flat()
     {
         if(data_alias)
         {
-            reference_Unique_Flat_to_Interface_mut<Chef>(this)->clear_data();
+            reference_Unique_Flat_to_Interface_mut<Chef>(this)->delete_data();
             assert(data_alias == 0);
         }
     }

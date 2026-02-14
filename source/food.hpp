@@ -31,7 +31,7 @@ template <typename Chef_Interface_const>
 struct Chef_Base_mut : public Chef_Interface_const
 {
     virtual T_Data_Alias release_data() = 0; // only use on Unique_food children of Tinterface
-    virtual void clear_data() = 0; // only use on Unique_food children of Tinterface
+    virtual void delete_data() = 0; // only use on Unique_food children of Tinterface
 };
 namespace impl
 {

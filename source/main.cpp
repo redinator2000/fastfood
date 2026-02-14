@@ -1,5 +1,6 @@
 #include "unique_flat.hpp"
 #include "weak_const.hpp"
+#include "weak_mut.hpp"
 #include <string>
 #include <vector>
 
@@ -223,6 +224,9 @@ bool blender_test(Args&&... args)
     My_Chef::Interface_mut * itwm = ff::reference_Unique_Flat_to_Interface_mut(&flat);
     itwm->manipulate();
     itwm->print_data();
+    ff::Weak_mut_food<Chef, Data> wmf = ff::reference_Unique_Flat_to_Weak_mut_food<Chef, Data>(&flat);
+    wmf.manipulate();
+    wmf.print_data();
     return true;
 }
 
