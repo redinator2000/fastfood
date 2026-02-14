@@ -12,13 +12,15 @@ struct Unique_food;
 template <typename Chef, Data_Empty Data>
 struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, Data>, Data>
 {
-    Unique_food() = default;
-    explicit Unique_food(T_Data_Alias)
+    const Data * get_data() const override
+        { return nullptr; }
+
+    Unique_food()
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 1 * sizeof(void*));
     }
     Weak_food<Chef, Data> as_Weak_food()
-    { return Weak_food<Chef, Data>(); }
+        { return Weak_food<Chef, Data>(); }
     T_Data_Alias release_data() override
         { return 0; }
     void clear_data() override
@@ -28,11 +30,6 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
     Unique_food(Unique_food && other) noexcept = default;
     Unique_food& operator=(Unique_food && other) noexcept = default;
 };
-template <typename Chef, Data_Empty Data, typename... Args>
-Unique_food<Chef, Data> make_Unique_food(Args&&... args)
-{
-    return Unique_food<Chef, Data>();
-}
 
 template <typename Chef, Data_Trivial Data>
 struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, Data>, Data>
@@ -42,9 +39,17 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
         Data data = Data();
         Trivial_Alias data_alias;
     };
+    const Data * get_data() const override
+        { return &data; }
+    Data * get_data()
+        { return &data; }
+
     Unique_food() = default;
+    explicit Unique_food(Data n_data) :
+        data(n_data)
+        {}
     explicit Unique_food(T_Data_Alias da) :
-    data_alias(da)
+        data_alias(da)
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 2 * sizeof(void*));
     }
@@ -52,27 +57,23 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
         { return data_alias; }
     void clear_data() override
         { data_alias = 0; }
+
+    Weak_food<Chef, Data> as_Weak_food()
+        { return Weak_food<Chef, Data>(data); }
+
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;
     Unique_food(Unique_food && other) noexcept = default;
     Unique_food& operator=(Unique_food && other) noexcept = default;
-
-    Weak_food<Chef, Data> as_Weak_food()
-        { return Weak_food<Chef, Data>(data); }
 };
-template <typename Chef, Data_Trivial Data, typename... Args>
-Unique_food<Chef, Data> make_Unique_food(Args&&... args)
-{
-    Unique_food<Chef, Data> ts;
-    ts.data = Data(std::forward<Args>(args)...);
-    return ts;
-}
 
 template <typename Chef, Data_Dynamic Data>
 struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, Data>, Data>
 {
     std::unique_ptr<Data> data = nullptr;
-    const Data * data_get() const
+    const Data * get_data() const override
+        { return data.get(); }
+    Data * get_data()
         { return data.get(); }
 
     T_Data_Alias release_data() override
@@ -84,12 +85,6 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
         { return Weak_food<Chef, Data>(this->data.get()); }
 
     Unique_food() = default;
-    explicit Unique_food(Data* ptr) : data(ptr) {}
-    explicit Unique_food(T_Data_Alias da) :
-    data(reinterpret_cast<Data *>(da))
-    {
-        static_assert(sizeof(Unique_food<Chef, Data>) == 2 * sizeof(void*));
-    }
     Unique_food(std::unique_ptr<Data> && n_data) :
     data(std::move(n_data))
         {}
@@ -98,6 +93,19 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
     Unique_food(Unique_food && other) noexcept = default;
     Unique_food& operator=(Unique_food && other) noexcept = default;
 };
+
+template <typename Chef, Data_Empty Data, typename... Args>
+Unique_food<Chef, Data> make_Unique_food(Args&&... args)
+{
+    return Unique_food<Chef, Data>();
+}
+template <typename Chef, Data_Trivial Data, typename... Args>
+Unique_food<Chef, Data> make_Unique_food(Args&&... args)
+{
+    return Unique_food<Chef, Data>(
+        Data(std::forward<Args>(args)...)
+    );
+}
 template <typename Chef, Data_Dynamic Data, typename... Args>
 Unique_food<Chef, Data> make_Unique_food(Args&&... args)
 {
@@ -105,6 +113,7 @@ Unique_food<Chef, Data> make_Unique_food(Args&&... args)
         std::make_unique<Data>(std::forward<Args>(args)...)
     );
 }
+
 }; // namespace ff
 
 #endif // FF_UNIQUE_HPP

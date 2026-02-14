@@ -13,15 +13,20 @@ struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data
         { assert(false); return 0; }
     void clear_data() override
         { assert(false); }
+
+    const Data * get_data() const override
+        { return nullptr; }
 };
 template <typename Chef, Data_Trivial Data>
 struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data>, Data>
 {
     union
     {
-        Data data = Data();
-        Trivial_Alias data_alias;
+        const Data data = Data();
+        const Trivial_Alias data_alias;
     };
+    const Data * get_data() const override
+        { return &data; }
 
     Weak_food() = default;
     Weak_food(Data n_data) : data(n_data)
@@ -34,12 +39,13 @@ struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data
 template <typename Chef, Data_Dynamic Data>
 struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data>, Data>
 {
-    Data * const data = nullptr;
-    const Data * data_get() const
+    const Data * const data = nullptr;
+
+    const Data * get_data() const override
         { return data; }
 
     Weak_food() = default;
-    Weak_food(Data * n_data) : data(n_data)
+    Weak_food(const Data * n_data) : data(n_data)
         {}
     T_Data_Alias release_data() override
         { assert(false); return 0; }

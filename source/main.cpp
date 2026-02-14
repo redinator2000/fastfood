@@ -1,5 +1,7 @@
 #include "unique_flat.hpp"
 #include "weak.hpp"
+#include <string>
+#include <vector>
 
 // chunk/id stuff
 
@@ -68,34 +70,6 @@ void register_tile_id()
 }
 
 // userspace i guess
-
-template <typename Data>
-struct My_Chef_Implement;
-
-struct My_Chef : public ff::Chef_Base
-{
-    virtual Tile_ID id_get() const = 0;
-
-    //below must be user implemented
-    virtual const char * name() const = 0;
-
-    template <typename Data>
-    using Implement = My_Chef_Implement<Data>;
-};
-
-template <typename Data>
-struct My_Chef_Implement : public ff::Chef_Implement<My_Chef, Data>
-{
-    Tile_ID id_get() const override
-    {
-        assert((tile_id<My_Chef, Data> != tile_id_uninitialized));
-        return tile_id<My_Chef, Data>;
-    }
-    const char * name() const override
-    {
-        return Data::name();
-    }
-};
 
 struct Tracker {
     int id;
@@ -170,6 +144,58 @@ namespace tiles
     };
 }
 
+template <typename Data>
+struct My_Chef_Implement;
+
+struct My_Chef : public ff::Chef_Base
+{
+    template <typename Data>
+    using Implement = My_Chef_Implement<Data>;
+
+    virtual Tile_ID id_get() const = 0;
+    virtual const char * name() const = 0;
+    virtual void print_data() const = 0;
+};
+
+template <typename Data>
+struct My_Chef_Implement : public ff::Chef_Implement<My_Chef, Data>
+{
+    Tile_ID id_get() const override
+    {
+        assert((tile_id<My_Chef, Data> != tile_id_uninitialized));
+        return tile_id<My_Chef, Data>;
+    }
+    const char * name() const override
+    {
+        return Data::name();
+    }
+    void print_data() const override
+    {
+        const Data * data = this->get_data();
+        if(!data)
+        {
+            printf("null data\n");
+            return;
+        }
+        if constexpr (std::is_same_v<Data, tiles::Switch>)
+        {
+            printf("on:%d\n", data->on);
+        }
+        else if constexpr (std::is_same_v<Data, tiles::Piano>)
+        {
+            printf("key:%f\n", data->keys[0]);
+        }
+        else if constexpr (std::is_same_v<Data, tiles::Sign>)
+        {
+            printf("text:%s\n", data->text.c_str());
+        }
+        else
+        {
+            printf("print_data not implemented\n");
+        }
+    }
+};
+
 template <typename Chef, typename Data, typename... Args>
 bool blender_test(Args&&... args)
 {
@@ -180,11 +206,14 @@ bool blender_test(Args&&... args)
     ff::Unique_Flat<Chef> flat = ff::Unique_Flat<Chef>(std::move(sign_moved));
     const My_Chef * itw = ff::reference_Unique_Flat_to_Chef(&flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
+    itw->print_data();
     return true;
 }
 
 int main()
 {
+    printf("starting\n");
+
     register_tile_id<My_Chef, tiles::Water>();
     register_tile_id<My_Chef, tiles::Stone>();
     register_tile_id<My_Chef, tiles::Switch>();
@@ -194,9 +223,9 @@ int main()
 
     assert((blender_test<My_Chef, tiles::Water>()));
     assert((blender_test<My_Chef, tiles::Stone>()));
-    assert((blender_test<My_Chef, tiles::Switch>()));
+    assert((blender_test<My_Chef, tiles::Switch>(true)));
     assert((blender_test<My_Chef, tiles::Piano>()));
-    assert((blender_test<My_Chef, tiles::Sign>()));
+    assert((blender_test<My_Chef, tiles::Sign>("hello")));
     assert((blender_test<My_Chef, tiles::Tracker_Toy>(4)));
 
     printf("ok!\n");

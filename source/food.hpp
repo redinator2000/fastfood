@@ -1,15 +1,8 @@
 #ifndef FF_FOOD_HPP
 #define FF_FOOD_HPP
 
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <variant>
-#include <cstdint>
 #include <memory>
-#include <unordered_map>
 #include <cassert>
-#include <vector>
 
 namespace ff
 {
@@ -41,12 +34,8 @@ struct Chef_Base
 template <typename Chef, typename Data>
 struct Chef_Implement : public Chef
 {
-    // virtual const Data * get_data() const = 0;
-    // virtual Data * get_data() = 0;
+    virtual const Data * get_data() const = 0;
 };
-
-template <typename Chef, typename Data>
-struct Weak_food;
 
 template <typename Chef, typename Inheriting, typename Data>
 struct Tinterface_Impl : public Chef::template Implement<Data>
@@ -62,12 +51,12 @@ struct Tinterface_Impl : public Chef::template Implement<Data>
             if constexpr (Data_Empty<Data>)
                 return true;
             else if constexpr (Data_Trivial<Data>)
-                return dynamic_cast<const Inheriting*>(this)->data_alias == dynamic_cast<const Inheriting*>(other)->data_alias;
+                return *this->get_data() == *other->get_data();
             else
             {
                 static_assert(Data_Dynamic<Data>);
-                const Data * td = dynamic_cast<const Inheriting*>(this)->data_get();
-                const Data * od = dynamic_cast<const Inheriting*>(other)->data_get();
+                const Data * td = this->get_data();
+                const Data * od = other->get_data();
                 if(td == od)
                     return true;
                 if(bool(td) != bool(od))
@@ -95,6 +84,10 @@ namespace impl
         return ripped;
     }
 } // namespace ipml
+
+
+template <typename Chef, typename Data>
+struct Weak_food;
 
 /*
 struct Weak_food_Vtable { virtual void dont_instantiate() = 0; };
