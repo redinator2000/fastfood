@@ -36,7 +36,7 @@ public:
     bool has_alternative() const
         { return unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>(); }
     template <Data_Empty Data>
-    Data * get_data()
+    Data * get_data_mut()
     {
         assert(has_alternative<Data>());
         return static_cast<Data *>(&data_alias);
@@ -48,7 +48,7 @@ public:
         return static_cast<Data *>(&data_alias);
     }
     template <Data_Trivial Data>
-    Data * get_data()
+    Data * get_data_mut()
     {
         assert(has_alternative<Data>());
         return static_cast<Data *>(&data_alias);
@@ -60,7 +60,7 @@ public:
         return static_cast<Data *>(&data_alias);
     }
     template <Data_Dynamic Data>
-    Data * get_data()
+    Data * get_data_mut()
     {
         assert(has_alternative<Data>());
         return static_cast<Data *>(data_alias);
@@ -76,7 +76,7 @@ public:
     {
         if(data_alias)
         {
-            reference_Unique_Flat_to_Chef<Chef>(this)->clear_data();
+            reference_Unique_Flat_to_Interface_mut<Chef>(this)->clear_data();
             assert(data_alias == 0);
         }
     }
@@ -87,14 +87,14 @@ public:
 };
 
 template <typename Chef>
-Chef * reference_Unique_Flat_to_Chef(Unique_Flat<Chef> * tf)
+Chef::Interface_mut * reference_Unique_Flat_to_Interface_mut(Unique_Flat<Chef> * tf)
 {
-    return reinterpret_cast<Chef *>(tf);
+    return reinterpret_cast<Chef::Interface_mut *>(tf);
 }
 template <typename Chef>
-const Chef * reference_Unique_Flat_to_Chef(const Unique_Flat<Chef> * tf)
+const Chef::Interface_const * reference_Unique_Flat_to_Interface_const(const Unique_Flat<Chef> * tf)
 {
-    return reinterpret_cast<const Chef *>(tf);
+    return reinterpret_cast<const Chef::Interface_const *>(tf);
 }
 
 }; // namespace ff

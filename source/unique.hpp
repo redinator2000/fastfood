@@ -10,11 +10,11 @@ template <typename Chef, typename Data>
 struct Unique_food;
 
 template <typename Chef, Data_Empty Data>
-struct Unique_food<Chef, Data> : public Chef_Base_Implement<Chef, Unique_food<Chef, Data>, Data>
+struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
 {
     const Data * get_data() const override
         { return nullptr; }
-    Data * get_data() override
+    Data * get_data_mut() override
         { return nullptr; }
 
 
@@ -35,7 +35,7 @@ struct Unique_food<Chef, Data> : public Chef_Base_Implement<Chef, Unique_food<Ch
 };
 
 template <typename Chef, Data_Trivial Data>
-struct Unique_food<Chef, Data> : public Chef_Base_Implement<Chef, Unique_food<Chef, Data>, Data>
+struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
 {
     union
     {
@@ -44,7 +44,7 @@ struct Unique_food<Chef, Data> : public Chef_Base_Implement<Chef, Unique_food<Ch
     };
     const Data * get_data() const override
         { return &data; }
-    Data * get_data() override
+    Data * get_data_mut() override
         { return &data; }
 
     Unique_food() = default;
@@ -71,12 +71,12 @@ struct Unique_food<Chef, Data> : public Chef_Base_Implement<Chef, Unique_food<Ch
 };
 
 template <typename Chef, Data_Dynamic Data>
-struct Unique_food<Chef, Data> : public Chef_Base_Implement<Chef, Unique_food<Chef, Data>, Data>
+struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
 {
     std::unique_ptr<Data> data = nullptr;
     const Data * get_data() const override
         { return data.get(); }
-    Data * get_data() override
+    Data * get_data_mut() override
         { return data.get(); }
 
     T_Data_Alias release_data() override

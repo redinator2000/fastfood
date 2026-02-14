@@ -7,20 +7,13 @@ namespace ff
 {
 
 template <typename Chef, Data_Empty Data>
-struct Weak_const_food<Chef, Data> : public Chef_Base_Implement<Chef, Weak_const_food<Chef, Data>, Data>
+struct Weak_const_food<Chef, Data> : public impl::Container_Parent_const<Chef, Data>
 {
-    T_Data_Alias release_data() override
-        { assert(false); return 0; }
-    void clear_data() override
-        { assert(false); }
-
     const Data * get_data() const override
         { return nullptr; }
-    Data * get_data() override
-        { assert(false); return nullptr; }
 };
 template <typename Chef, Data_Trivial Data>
-struct Weak_const_food<Chef, Data> : public Chef_Base_Implement<Chef, Weak_const_food<Chef, Data>, Data>
+struct Weak_const_food<Chef, Data> : public impl::Container_Parent_const<Chef, Data>
 {
     union
     {
@@ -29,32 +22,20 @@ struct Weak_const_food<Chef, Data> : public Chef_Base_Implement<Chef, Weak_const
     };
     const Data * get_data() const override
         { return &data; }
-    Data * get_data() override
-        { assert(false); return nullptr; }
 
     Weak_const_food(Data n_data) : data(n_data)
         {}
-    T_Data_Alias release_data() override
-        { assert(false); return 0; }
-    void clear_data() override
-        { assert(false); }
 };
 template <typename Chef, Data_Dynamic Data>
-struct Weak_const_food<Chef, Data> : public Chef_Base_Implement<Chef, Weak_const_food<Chef, Data>, Data>
+struct Weak_const_food<Chef, Data> : public impl::Container_Parent_const<Chef, Data>
 {
     const Data * const data = nullptr;
 
     const Data * get_data() const override
         { return data; }
-    Data * get_data() override
-        { assert(false); return nullptr; }
 
     Weak_const_food(const Data * n_data) : data(n_data)
         {}
-    T_Data_Alias release_data() override
-        { assert(false); return 0; }
-    void clear_data() override
-        { assert(false); }
 };
 
 } // namespace ff

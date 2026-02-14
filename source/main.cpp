@@ -15,9 +15,9 @@ private:
 
     uint64_t find_or_insert_alias(ff::Unique_Flat<Chef> tsf)
     {
-        const Chef * itw = ff::reference_Unique_Flat_to_Chef(&tsf);
+        const typename Chef::Interface_const * itw = ff::reference_Unique_Flat_to_Interface_const(&tsf);
         for(uint64_t a = 0; a < flattened.size(); a++)
-            if(itw->equals_Tinterface(ff::reference_Unique_Flat_to_Chef(&flattened[a])))
+            if(itw->equals_Tinterface(ff::reference_Unique_Flat_to_Interface_const(&flattened[a])))
                 return a;
         flattened.push_back(std::move(tsf));
         return flattened.size() - 1;
@@ -28,9 +28,9 @@ public:
         aliases.resize(s);
     }
 
-    const Chef * get_IWeak_food(size_t index) const // resizing will invalidate these
+    const typename Chef::Interface_const * get_IWeak_food(size_t index) const // resizing will invalidate these
     {
-        return reference_Unique_Flat_to_Chef(&flattened[aliases[index]]);
+        return reference_Unique_Flat_to_Interface_const(&flattened[aliases[index]]);
     }
     void garbage_collect()
     {
@@ -145,55 +145,68 @@ namespace tiles
 }
 
 template <typename Data>
-struct My_Chef_Implement;
+struct My_Chef_Implement_Const;
 
-struct My_Chef : public ff::Chef_Base
+struct My_Chef
 {
-    template <typename Data>
-    using Implement = My_Chef_Implement<Data>;
-
-    virtual Tile_ID id_get() const = 0;
-    virtual const char * name() const = 0;
-    virtual void print_data() const = 0;
-};
-
-template <typename Data>
-struct My_Chef_Implement : public ff::Chef_Implement<My_Chef, Data>
-{
-    Tile_ID id_get() const override
+    struct Interface_const : public ff::Chef_Base_const
     {
-        assert((tile_id<My_Chef, Data> != tile_id_uninitialized));
-        return tile_id<My_Chef, Data>;
-    }
-    const char * name() const override
+        virtual Tile_ID id_get() const = 0;
+        virtual const char * name() const = 0;
+        virtual void print_data() const = 0;
+    };
+    struct Interface_mut : public ff::Chef_Base_mut<Interface_const>
     {
-        return Data::name();
-    }
-    void print_data() const override
+        virtual void manipulate() = 0;
+    };
+    template <typename Has_get_data, typename Data>
+    struct Implement_const : public Has_get_data
     {
-        const Data * data = this->get_data();
-        if(!data)
+        Tile_ID id_get() const override
         {
-            printf("null data\n");
-            return;
+            assert((tile_id<My_Chef, Data> != tile_id_uninitialized));
+            return tile_id<My_Chef, Data>;
         }
-        if constexpr (std::is_same_v<Data, tiles::Switch>)
+        const char * name() const override
         {
-            printf("on:%d\n", data->on);
+            return Data::name();
         }
-        else if constexpr (std::is_same_v<Data, tiles::Piano>)
+        void print_data() const override
         {
-            printf("key:%f\n", data->keys[0]);
+            const Data * data = this->get_data();
+            if(!data)
+            {
+                printf("null data\n");
+                return;
+            }
+            if constexpr (std::is_same_v<Data, tiles::Switch>)
+            {
+                printf("on:%d\n", data->on);
+            }
+            else if constexpr (std::is_same_v<Data, tiles::Piano>)
+            {
+                printf("key:%f\n", data->keys[0]);
+            }
+            else if constexpr (std::is_same_v<Data, tiles::Sign>)
+            {
+                printf("text:%s\n", data->text.c_str());
+            }
+            else
+            {
+                printf("print_data not implemented\n");
+            }
         }
-        else if constexpr (std::is_same_v<Data, tiles::Sign>)
+    };
+    template <typename Has_get_data, typename Data>
+    struct Implement_mut : public Implement_const<Has_get_data, Data>
+    {
+        void manipulate() override
         {
-            printf("text:%s\n", data->text.c_str());
+            Data * data = this->get_data_mut();
+            if constexpr (std::is_same_v<Data, tiles::Switch>)
+                data->on = !data->on;
         }
-        else
-        {
-            printf("print_data not implemented\n");
-        }
-    }
+    };
 };
 
 template <typename Chef, typename Data, typename... Args>
@@ -204,9 +217,12 @@ bool blender_test(Args&&... args)
     ff::Unique_food<Chef, Data> sign_moved = std::move(sign_strong);
     [[maybe_unused]] ff::Weak_const_food<Chef, Data> sign_weak = sign_moved.as_Weak_const_food();
     ff::Unique_Flat<Chef> flat = ff::Unique_Flat<Chef>(std::move(sign_moved));
-    const My_Chef * itw = ff::reference_Unique_Flat_to_Chef(&flat);
+    const My_Chef::Interface_const * itw = ff::reference_Unique_Flat_to_Interface_const(&flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
     itw->print_data();
+    My_Chef::Interface_mut * itwm = ff::reference_Unique_Flat_to_Interface_mut(&flat);
+    itwm->manipulate();
+    itwm->print_data();
     return true;
 }
 

@@ -23,55 +23,62 @@ concept Data_Dynamic =
 
 using T_Data_Alias = Trivial_Alias;
 
-struct Chef_Base
+struct Chef_Base_const
 {
-    virtual bool equals_Tinterface(const Chef_Base *) const = 0;
-
+    // virtual bool equals_Tinterface(const Chef_Base_const *) const = 0;
+};
+template <typename Chef_Interface_const>
+struct Chef_Base_mut : public Chef_Interface_const
+{
     virtual T_Data_Alias release_data() = 0; // only use on Unique_food children of Tinterface
     virtual void clear_data() = 0; // only use on Unique_food children of Tinterface
 };
-
-template <typename Chef, typename Data>
-struct Chef_Implement : public Chef
-{
-    virtual const Data * get_data() const = 0;
-    virtual Data * get_data() = 0;
-};
-
-template <typename Chef, typename Inheriting, typename Data>
-struct Chef_Base_Implement : public Chef::template Implement<Data>
-{
-    bool equals_Tinterface(const Chef_Base * other_tw) const override
-    {
-        if(!other_tw)
-            return false;
-        if(other_tw == this)
-            return true;
-        if(const Chef_Base_Implement<Chef, Inheriting, Data> * other = dynamic_cast<const Chef_Base_Implement<Chef, Inheriting, Data> *>(other_tw))
-        {
-            if constexpr (Data_Empty<Data>)
-                return true;
-            else if constexpr (Data_Trivial<Data>)
-                return *this->get_data() == *other->get_data();
-            else
-            {
-                static_assert(Data_Dynamic<Data>);
-                const Data * td = this->get_data();
-                const Data * od = other->get_data();
-                if(td == od)
-                    return true;
-                if(bool(td) != bool(od))
-                    return false;
-                return *td == *od;
-            }
-        }
-        else
-            return false;
-    }
-};
-
 namespace impl
 {
+    template <typename Parent, typename Data>
+    struct Chef_Implementer_const : public Parent
+    {
+        virtual const Data * get_data() const = 0;
+        /*
+        bool equals_Tinterface(const Chef_Base * other_tw) const override
+        {
+            if(!other_tw)
+                return false;
+            if(other_tw == this)
+                return true;
+            if(const Chef_Base_Implement<Chef, Inheriting, Data> * other = dynamic_cast<const Chef_Base_Implement<Chef, Inheriting, Data> *>(other_tw))
+            {
+                if constexpr (Data_Empty<Data>)
+                    return true;
+                else if constexpr (Data_Trivial<Data>)
+                    return *this->get_data() == *other->get_data();
+                else
+                {
+                    static_assert(Data_Dynamic<Data>);
+                    const Data * td = this->get_data();
+                    const Data * od = other->get_data();
+                    if(td == od)
+                        return true;
+                    if(bool(td) != bool(od))
+                        return false;
+                    return *td == *od;
+                }
+            }
+            else
+                return false;
+        }*/
+    };
+    template <typename Chef, typename Data>
+    struct Chef_Implementer_mut : public Chef_Implementer_const<typename Chef::Interface_mut, Data>
+    {
+        virtual Data * get_data_mut() = 0;
+    };
+
+    template <typename Chef, typename Data>
+    using Container_Parent_const = typename Chef::Implement_const<Chef_Implementer_const<typename Chef::Interface_const, Data>, Data>;
+    template <typename Chef, typename Data>
+    using Container_Parent_mut = typename Chef::Implement_mut<Chef_Implementer_mut<Chef, Data>, Data>;
+
     template <typename T>
     void * vtable_ripper()
     {
