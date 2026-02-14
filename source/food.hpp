@@ -35,10 +35,11 @@ template <typename Chef, typename Data>
 struct Chef_Implement : public Chef
 {
     virtual const Data * get_data() const = 0;
+    virtual Data * get_data() = 0;
 };
 
 template <typename Chef, typename Inheriting, typename Data>
-struct Tinterface_Impl : public Chef::template Implement<Data>
+struct Chef_Base_Implement : public Chef::template Implement<Data>
 {
     bool equals_Tinterface(const Chef_Base * other_tw) const override
     {
@@ -46,7 +47,7 @@ struct Tinterface_Impl : public Chef::template Implement<Data>
             return false;
         if(other_tw == this)
             return true;
-        if(const Tinterface_Impl<Chef, Inheriting, Data> * other = dynamic_cast<const Tinterface_Impl<Chef, Inheriting, Data> *>(other_tw))
+        if(const Chef_Base_Implement<Chef, Inheriting, Data> * other = dynamic_cast<const Chef_Base_Implement<Chef, Inheriting, Data> *>(other_tw))
         {
             if constexpr (Data_Empty<Data>)
                 return true;
@@ -88,6 +89,8 @@ namespace impl
 
 template <typename Chef, typename Data>
 struct Weak_const_food;
+template <typename Chef, typename Data>
+class Weak_mut_food;
 
 /*
 struct Weak_food_Vtable { virtual void dont_instantiate() = 0; };
