@@ -1,0 +1,5 @@
+build
+build*
+scraps*
+.kdev4*
+*.kdev4
