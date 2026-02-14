@@ -87,7 +87,7 @@ namespace impl
 
 
 template <typename Chef, typename Data>
-struct Weak_food;
+struct Weak_const_food;
 
 /*
 struct Weak_food_Vtable { virtual void dont_instantiate() = 0; };

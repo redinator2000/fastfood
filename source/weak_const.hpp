@@ -1,5 +1,5 @@
-#ifndef FF_WEAK_HPP
-#define FF_WEAK_HPP
+#ifndef FF_WEAK_CONST_HPP
+#define FF_WEAK_CONST_HPP
 
 #include "food.hpp"
 
@@ -7,7 +7,7 @@ namespace ff
 {
 
 template <typename Chef, Data_Empty Data>
-struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data>, Data>
+struct Weak_const_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_const_food<Chef, Data>, Data>
 {
     T_Data_Alias release_data() override
         { assert(false); return 0; }
@@ -18,7 +18,7 @@ struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data
         { return nullptr; }
 };
 template <typename Chef, Data_Trivial Data>
-struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data>, Data>
+struct Weak_const_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_const_food<Chef, Data>, Data>
 {
     union
     {
@@ -28,8 +28,8 @@ struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data
     const Data * get_data() const override
         { return &data; }
 
-    Weak_food() = default;
-    Weak_food(Data n_data) : data(n_data)
+    Weak_const_food() = default;
+    Weak_const_food(Data n_data) : data(n_data)
         {}
     T_Data_Alias release_data() override
         { assert(false); return 0; }
@@ -37,15 +37,15 @@ struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data
         { assert(false); }
 };
 template <typename Chef, Data_Dynamic Data>
-struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data>, Data>
+struct Weak_const_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_const_food<Chef, Data>, Data>
 {
     const Data * const data = nullptr;
 
     const Data * get_data() const override
         { return data; }
 
-    Weak_food() = default;
-    Weak_food(const Data * n_data) : data(n_data)
+    Weak_const_food() = default;
+    Weak_const_food(const Data * n_data) : data(n_data)
         {}
     T_Data_Alias release_data() override
         { assert(false); return 0; }
@@ -55,4 +55,4 @@ struct Weak_food<Chef, Data> : public Tinterface_Impl<Chef, Weak_food<Chef, Data
 
 } // namespace ff
 
-#endif // FF_WEAK_HPP
+#endif // FF_WEAK_CONST_HPP

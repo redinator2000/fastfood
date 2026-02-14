@@ -19,8 +19,8 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 1 * sizeof(void*));
     }
-    Weak_food<Chef, Data> as_Weak_food()
-        { return Weak_food<Chef, Data>(); }
+    Weak_const_food<Chef, Data> as_Weak_const_food()
+        { return Weak_const_food<Chef, Data>(); }
     T_Data_Alias release_data() override
         { return 0; }
     void clear_data() override
@@ -58,8 +58,8 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
     void clear_data() override
         { data_alias = 0; }
 
-    Weak_food<Chef, Data> as_Weak_food()
-        { return Weak_food<Chef, Data>(data); }
+    Weak_const_food<Chef, Data> as_Weak_const_food()
+        { return Weak_const_food<Chef, Data>(data); }
 
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;
@@ -81,8 +81,8 @@ struct Unique_food<Chef, Data> : public Tinterface_Impl<Chef, Unique_food<Chef, 
     void clear_data() override
         { data.reset(); }
 
-    Weak_food<Chef, Data> as_Weak_food()
-        { return Weak_food<Chef, Data>(this->data.get()); }
+    Weak_const_food<Chef, Data> as_Weak_const_food()
+        { return Weak_const_food<Chef, Data>(this->data.get()); }
 
     Unique_food() = default;
     Unique_food(std::unique_ptr<Data> && n_data) :

@@ -1,5 +1,5 @@
 #include "unique_flat.hpp"
-#include "weak.hpp"
+#include "weak_const.hpp"
 #include <string>
 #include <vector>
 
@@ -202,7 +202,7 @@ bool blender_test(Args&&... args)
     printf("testing id:%ld name:%s\n", tile_id<Chef, Data>, Data::name());
     ff::Unique_food<Chef, Data> sign_strong = ff::make_Unique_food<Chef, Data>(std::forward<Args>(args)...);
     ff::Unique_food<Chef, Data> sign_moved = std::move(sign_strong);
-    [[maybe_unused]] ff::Weak_food<Chef, Data> sign_weak = sign_moved.as_Weak_food();
+    [[maybe_unused]] ff::Weak_const_food<Chef, Data> sign_weak = sign_moved.as_Weak_const_food();
     ff::Unique_Flat<Chef> flat = ff::Unique_Flat<Chef>(std::move(sign_moved));
     const My_Chef * itw = ff::reference_Unique_Flat_to_Chef(&flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
