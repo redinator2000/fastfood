@@ -114,6 +114,8 @@ namespace tiles
     {
         static const char * name(){ return "stone"; }
         bool operator==(const Stone &) const = default;
+
+        bool moss[8] = {0};
     };
     struct Switch
     {
@@ -180,7 +182,11 @@ struct My_Chef
                 printf("null data\n");
                 return;
             }
-            if constexpr (std::is_same_v<Data, tiles::Switch>)
+            if constexpr (std::is_same_v<Data, tiles::Stone>)
+            {
+                printf("moss:%d %d %d %d %d %d %d %d\n", data->moss[0], data->moss[1], data->moss[2], data->moss[3], data->moss[4], data->moss[5], data->moss[6], data->moss[7]);
+            }
+            else if constexpr (std::is_same_v<Data, tiles::Switch>)
             {
                 printf("on:%d\n", data->on);
             }
@@ -194,7 +200,7 @@ struct My_Chef
             }
             else
             {
-                printf("print_data not implemented\n");
+                printf("print_data not implemented for %s\n", name());
             }
         }
     };
@@ -204,8 +210,16 @@ struct My_Chef
         void manipulate() override
         {
             Data * data = this->get_data_mut();
+            if(!data)
+                return;
             if constexpr (std::is_same_v<Data, tiles::Switch>)
+            {
                 data->on = !data->on;
+            }
+            if constexpr (std::is_same_v<Data, tiles::Stone>)
+            {
+                data->moss[0] = !data->moss[0];
+            }
         }
     };
 };
@@ -230,6 +244,19 @@ bool blender_test(Args&&... args)
     return true;
 }
 
+bool vector_test()
+{
+    std::vector<ff::Unique_Flat<My_Chef>> vec = {};
+    vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Water>());
+    vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Stone>());
+    vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Switch>(true));
+    vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Piano>());
+    vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Sign>("hello vec"));
+    vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Tracker_Toy>(5));
+
+    return true;
+}
+
 int main()
 {
     printf("starting\n");
@@ -245,8 +272,10 @@ int main()
     assert((blender_test<My_Chef, tiles::Stone>()));
     assert((blender_test<My_Chef, tiles::Switch>(true)));
     assert((blender_test<My_Chef, tiles::Piano>()));
-    assert((blender_test<My_Chef, tiles::Sign>("hello")));
+    assert((blender_test<My_Chef, tiles::Sign>("hello blender")));
     assert((blender_test<My_Chef, tiles::Tracker_Toy>(4)));
+
+    assert(vector_test());
 
     printf("ok!\n");
 }

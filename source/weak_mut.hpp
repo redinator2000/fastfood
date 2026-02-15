@@ -20,11 +20,6 @@ public:
         { return data; }
     Data * get_data_mut() override
         { return data; }
-
-    T_Data_Alias release_data() override
-        { assert(false); return 0; }
-    void delete_data() override
-        { assert(false); }
 };
 template <typename Chef, typename Data>
 Weak_mut_food<Chef, Data> reference_Unique_food_to_Weak_mut_food(Unique_food<Chef, Data> * uf)

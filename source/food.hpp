@@ -30,13 +30,17 @@ struct Chef_Base_const
 template <typename Chef_Interface_const>
 struct Chef_Base_mut : public Chef_Interface_const
 {
-    virtual T_Data_Alias release_data() = 0; // only use on Unique_food children of Tinterface
-    virtual void delete_data() = 0; // only use on Unique_food children of Tinterface
 };
 namespace impl
 {
-    template <typename Parent, typename Data>
-    struct Chef_Implementer_const : public Parent
+    template <typename Chef_Interface_mut>
+    struct Chef_Base_own : public Chef_Interface_mut
+    {
+        virtual void delete_data() = 0;
+    };
+
+    template <typename Impl_Parent, typename Data>
+    struct Chef_Implementer_const : public Impl_Parent
     {
         virtual const Data * get_data() const = 0;
         /*
@@ -68,16 +72,22 @@ namespace impl
                 return false;
         }*/
     };
-    template <typename Chef, typename Data>
-    struct Chef_Implementer_mut : public Chef_Implementer_const<typename Chef::Interface_mut, Data>
+    template <typename Impl_Parent, typename Data>
+    struct Chef_Implementer_mut : public Chef_Implementer_const<Impl_Parent, Data>
     {
         virtual Data * get_data_mut() = 0;
+    };
+    template <typename Impl_Parent, typename Data>
+    struct Chef_Implementer_own : public Chef_Implementer_mut<Impl_Parent, Data>
+    {
     };
 
     template <typename Chef, typename Data>
     using Container_Parent_const = typename Chef::Implement_const<Chef_Implementer_const<typename Chef::Interface_const, Data>, Data>;
     template <typename Chef, typename Data>
-    using Container_Parent_mut = typename Chef::Implement_mut<Chef_Implementer_mut<Chef, Data>, Data>;
+    using Container_Parent_mut = typename Chef::Implement_mut<Chef_Implementer_mut<typename Chef::Interface_mut, Data>, Data>;
+    template <typename Chef, typename Data>
+    using Container_Parent_own = typename Chef::Implement_mut<Chef_Implementer_own<Chef_Base_own<typename Chef::Interface_mut>, Data>, Data>;
 
     template <typename T>
     void * vtable_ripper()
@@ -93,20 +103,8 @@ namespace impl
     }
 } // namespace ipml
 
-
 template <typename Chef, typename Data>
 struct Weak_const_food;
-template <typename Chef, typename Data>
-class Weak_mut_food;
-
-/*
-struct Weak_food_Vtable { virtual void dont_instantiate() = 0; };
-template <typename Chef, typename Data>
-Weak_food_Vtable * tweak_vtable_ripper()
-{
-    return static_cast<Weak_food_Vtable *>(vtable_ripper<Weak_food<Chef, Data>>());
-}
-*/
 
 }; // namespace ff
 

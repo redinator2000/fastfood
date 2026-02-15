@@ -6,6 +6,9 @@
 namespace ff
 {
 
+template <typename Chef>
+class Unique_Flat;
+
 namespace impl
 {
     struct Unique_food_Vtable { virtual void dont_instantiate() = 0; };
@@ -14,7 +17,13 @@ namespace impl
     {
         return static_cast<Unique_food_Vtable *>(vtable_ripper<Unique_food<Chef, Data>>());
     }
-} // namespace impl
+
+    template <typename Chef>
+    Chef_Base_own<typename Chef::Interface_mut> * reference_Unique_Flat_to_Interface_own(Unique_Flat<Chef> * tf)
+    {
+        return reinterpret_cast<Chef_Base_own<typename Chef::Interface_mut> *>(tf);
+    }
+}; //namespace impl
 
 template <typename Chef>
 class Unique_Flat
@@ -27,9 +36,17 @@ private:
         data_alias(n_data)
         {}
 public:
-    template <typename Data>
+    template <Data_Empty Data>
+    Unique_Flat(Unique_food<Chef, Data> &&) :
+        Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), 0)
+        {}
+    template <Data_Trivial Data>
     Unique_Flat(Unique_food<Chef, Data> && ts) :
-    Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), ts.release_data())
+        Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), ts.data_alias)
+        {}
+    template <Data_Dynamic Data>
+    Unique_Flat(Unique_food<Chef, Data> && ts) :
+        Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), reinterpret_cast<T_Data_Alias>(ts.data.release()))
         {}
 
     template <typename Data>
@@ -76,14 +93,30 @@ public:
     {
         if(data_alias)
         {
-            reference_Unique_Flat_to_Interface_mut<Chef>(this)->delete_data();
+            impl::reference_Unique_Flat_to_Interface_own<Chef>(this)->delete_data();
             assert(data_alias == 0);
         }
     }
     Unique_Flat(const Unique_Flat & other) = delete;
     Unique_Flat & operator=(const Unique_Flat & other) = delete;
-    Unique_Flat(Unique_Flat && other) noexcept = default;
-    Unique_Flat& operator=(Unique_Flat && other) noexcept = default;
+    Unique_Flat(Unique_Flat && other) noexcept :
+        Unique_Flat(other.unique_food_vtable, other.data_alias)
+    {
+        other.unique_food_vtable = nullptr;
+        other.data_alias = 0;
+    }
+    Unique_Flat& operator=(Unique_Flat && other) noexcept
+    {
+        if(data_alias)
+        {
+            impl::reference_Unique_Flat_to_Interface_own<Chef>(this)->delete_data();
+            assert(data_alias == 0);
+        }
+        this->unique_food_vtable = other->unique_food_vtable;
+        this->data_alias = other->data_alias;
+        other.unique_food_vtable = nullptr;
+        other.data_alias = 0;
+    }
 };
 
 template <typename Chef>

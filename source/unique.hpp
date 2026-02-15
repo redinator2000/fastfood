@@ -10,7 +10,7 @@ template <typename Chef, typename Data>
 struct Unique_food;
 
 template <typename Chef, Data_Empty Data>
-struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
+struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
 {
     const Data * get_data() const override
         { return nullptr; }
@@ -24,8 +24,6 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
     }
     Weak_const_food<Chef, Data> as_Weak_const_food()
         { return Weak_const_food<Chef, Data>(); }
-    T_Data_Alias release_data() override
-        { return 0; }
     void delete_data() override
         {}
     Unique_food(const Unique_food & other) = delete;
@@ -35,7 +33,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
 };
 
 template <typename Chef, Data_Trivial Data>
-struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
+struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
 {
     union
     {
@@ -56,8 +54,6 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 2 * sizeof(void*));
     }
-    T_Data_Alias release_data() override
-        { return data_alias; }
     void delete_data() override
         { data_alias = 0; }
 
@@ -71,7 +67,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
 };
 
 template <typename Chef, Data_Dynamic Data>
-struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
+struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
 {
     std::unique_ptr<Data> data = nullptr;
     const Data * get_data() const override
@@ -79,8 +75,6 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_mut<Chef, Data>
     Data * get_data_mut() override
         { return data.get(); }
 
-    T_Data_Alias release_data() override
-        { return reinterpret_cast<T_Data_Alias>(data.release()); }
     void delete_data() override
         { data.reset(); }
 
