@@ -1,6 +1,6 @@
-#include "unique_flat.hpp"
-#include "weak_const.hpp"
-#include "weak_mut.hpp"
+#include "fastfood/unique_flat.hpp"
+#include "fastfood/weak_const.hpp"
+#include "fastfood/weak_mut.hpp"
 #include <string>
 #include <vector>
 
@@ -267,9 +267,10 @@ void example()
     printf("ok!\n");
 }
 
-/*
+#ifdef FASTFOOD_RUN_EXAMPLE
 int main()
 {
     example();
 }
-*/
+#endif // FASTFOOD_RUN_EXAMPLE
+
