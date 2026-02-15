@@ -267,7 +267,9 @@ void example()
     printf("ok!\n");
 }
 
+/*
 int main()
 {
     example();
 }
+*/
