@@ -4,59 +4,6 @@
 #include <string>
 #include <vector>
 
-// chunk/id stuff
-
-template <typename Chef>
-struct Chunk
-{
-private:
-    std::vector<uint32_t> aliases; //could be a variant with every type of unsigned
-
-    std::vector<ff::Unique_Flat<Chef>> flattened; //these tweaks are owning
-
-    uint64_t find_or_insert_alias(ff::Unique_Flat<Chef> tsf)
-    {
-        const typename Chef::Interface_const * itw = ff::reference_Unique_Flat_to_Interface_const(&tsf);
-        for(uint64_t a = 0; a < flattened.size(); a++)
-            if(itw->equals_Tinterface(ff::reference_Unique_Flat_to_Interface_const(&flattened[a])))
-                return a;
-        flattened.push_back(std::move(tsf));
-        return flattened.size() - 1;
-    }
-public:
-    void resize(size_t s)
-    {
-        aliases.resize(s);
-    }
-
-    const typename Chef::Interface_const * get_IWeak_food(size_t index) const // resizing will invalidate these
-    {
-        return reference_Unique_Flat_to_Interface_const(&flattened[aliases[index]]);
-    }
-    void garbage_collect()
-    {
-        std::vector<uint32_t> usage_count{};
-        usage_count.resize(flattened.size());
-        for(const auto & a : aliases)
-            usage_count[a]++;
-        std::vector<uint32_t> alias_renames{}; //microoptimization: this could probably be the reused array of usage_count
-        alias_renames.resize(flattened.size());
-        uint32_t lowest_unused_new_a = 0;
-        for(uint32_t old_a = 0; old_a < flattened.size(); old_a++)
-        {
-            if(usage_count[old_a])
-            {
-                uint32_t new_a = lowest_unused_new_a++;
-                alias_renames[old_a] = new_a;
-                assert(new_a <= old_a);
-                flattened[new_a] = flattened[old_a];
-            }
-        }
-        for(auto & a : aliases)
-            a = alias_renames[a];
-    }
-};
-
 using Tile_ID = uint64_t;
 constexpr Tile_ID tile_id_uninitialized = UINT64_MAX;
 template <typename Chef, typename Data>
@@ -69,8 +16,6 @@ void register_tile_id()
     assert((tile_id<Chef, Data> == tile_id_uninitialized));
     tile_id<Chef, Data> = register_tile_id_highest_used++;
 }
-
-// userspace i guess
 
 struct Tracker {
     int id;
@@ -176,6 +121,11 @@ struct My_Chef
         }
         void print_data() const override
         {
+            if constexpr (ff::Data_Empty<Data>)
+            {
+                printf("empty data\n");
+                return;
+            }
             const Data * data = this->get_data();
             if(!data)
             {
@@ -216,9 +166,13 @@ struct My_Chef
             {
                 data->on = !data->on;
             }
-            if constexpr (std::is_same_v<Data, tiles::Stone>)
+            else if constexpr (std::is_same_v<Data, tiles::Stone>)
             {
                 data->moss[0] = !data->moss[0];
+            }
+            else if constexpr (std::is_same_v<Data, tiles::Piano>)
+            {
+                data->keys[0] += 0.125f;
             }
         }
     };
@@ -235,9 +189,9 @@ bool blender_test(Args&&... args)
     const My_Chef::Interface_const * itw = ff::reference_Unique_Flat_to_Interface_const(&flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
     itw->print_data();
-    My_Chef::Interface_mut * itwm = ff::reference_Unique_Flat_to_Interface_mut(&flat);
-    itwm->manipulate();
-    itwm->print_data();
+    My_Chef::Interface_mut * itm = ff::reference_Unique_Flat_to_Interface_mut(&flat);
+    itm->manipulate();
+    itm->print_data();
     ff::Weak_mut_food<Chef, Data> wmf = ff::reference_Unique_Flat_to_Weak_mut_food<Chef, Data>(&flat);
     wmf.manipulate();
     wmf.print_data();
@@ -246,6 +200,7 @@ bool blender_test(Args&&... args)
 
 bool vector_test()
 {
+    printf("vector test\n");
     std::vector<ff::Unique_Flat<My_Chef>> vec = {};
     vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Water>());
     vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Stone>());
@@ -254,10 +209,18 @@ bool vector_test()
     vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Sign>("hello vec"));
     vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Tracker_Toy>(5));
 
+    for(auto & e : vec)
+    {
+        My_Chef::Interface_mut * itm = ff::reference_Unique_Flat_to_Interface_mut(&e);
+        itm->print_data();
+        itm->manipulate();
+        itm->print_data();
+    }
+
     return true;
 }
 
-int main()
+void example()
 {
     printf("starting\n");
 
@@ -278,4 +241,9 @@ int main()
     assert(vector_test());
 
     printf("ok!\n");
+}
+
+int main()
+{
+    example();
 }
