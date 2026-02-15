@@ -1,7 +1,7 @@
 #ifndef FF_WEAK_CONST_HPP
 #define FF_WEAK_CONST_HPP
 
-#include "food.hpp"
+#include "chef.hpp"
 
 namespace ff
 {

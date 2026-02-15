@@ -1,7 +1,7 @@
 #ifndef FF_UNIQUE_HPP
 #define FF_UNIQUE_HPP
 
-#include "food.hpp"
+#include "chef.hpp"
 
 namespace ff
 {
@@ -49,7 +49,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     explicit Unique_food(Data n_data) :
         data(n_data)
         {}
-    explicit Unique_food(T_Data_Alias da) :
+    explicit Unique_food(Data_Alias da) :
         data_alias(da)
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 2 * sizeof(void*));
@@ -83,7 +83,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
 
     Unique_food() = default;
     Unique_food(std::unique_ptr<Data> && n_data) :
-    data(std::move(n_data))
+        data(std::move(n_data))
         {}
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;

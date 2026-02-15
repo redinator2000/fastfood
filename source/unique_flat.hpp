@@ -30,8 +30,8 @@ class Unique_Flat
 {
 private:
     const impl::Unique_food_Vtable * unique_food_vtable = nullptr;
-    T_Data_Alias data_alias = 0;
-    Unique_Flat(const impl::Unique_food_Vtable * n_vtable, T_Data_Alias n_data) :
+    Data_Alias data_alias = 0;
+    Unique_Flat(const impl::Unique_food_Vtable * n_vtable, Data_Alias n_data) :
         unique_food_vtable(n_vtable),
         data_alias(n_data)
         {}
@@ -46,7 +46,7 @@ public:
         {}
     template <Data_Dynamic Data>
     Unique_Flat(Unique_food<Chef, Data> && ts) :
-        Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), reinterpret_cast<T_Data_Alias>(ts.data.release()))
+        Unique_Flat(impl::unique_food_vtable_ripper<Chef, Data>(), reinterpret_cast<Data_Alias>(ts.data.release()))
         {}
 
     template <typename Data>
@@ -129,6 +129,26 @@ const Chef::Interface_const * reference_Unique_Flat_to_Interface_const(const Uni
 {
     return reinterpret_cast<const Chef::Interface_const *>(tf);
 }
+
+namespace impl
+{
+    template <typename Chef, typename Impl_Parent, typename Data>
+    Unique_Flat<Chef> Chef_Implementer_const<Chef, Impl_Parent, Data>::clone() const
+    {
+        if constexpr (Data_Empty<Data>)
+            return Unique_Flat<Chef>(ff::make_Unique_food<Chef, Data>());
+        else if constexpr (Data_Trivial<Data>)
+            return Unique_Flat<Chef>(ff::make_Unique_food<Chef, Data>(*this->get_data()));
+        else
+        {
+            const Data * td = this->get_data();
+            if(td)
+                return Unique_Flat<Chef>(ff::make_Unique_food<Chef, Data>(*td));
+            else
+                return Unique_Flat<Chef>(ff::Unique_food<Chef, Data>(std::unique_ptr<Data>(nullptr)));
+        }
+    }
+} // namespace impl
 
 }; // namespace ff
 

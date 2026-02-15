@@ -97,7 +97,7 @@ struct My_Chef_Implement_Const;
 
 struct My_Chef
 {
-    struct Interface_const : public ff::Chef_Base_const
+    struct Interface_const : public ff::Chef_Base_const<My_Chef>
     {
         virtual Tile_ID id_get() const = 0;
         virtual const char * name() const = 0;
@@ -174,6 +174,10 @@ struct My_Chef
             {
                 data->keys[0] += 0.125f;
             }
+            else if constexpr (std::is_same_v<Data, tiles::Sign>)
+            {
+                data->text += "-manipluated";
+            }
         }
     };
 };
@@ -184,17 +188,23 @@ bool blender_test(Args&&... args)
     printf("testing id:%ld name:%s\n", tile_id<Chef, Data>, Data::name());
     ff::Unique_food<Chef, Data> sign_strong = ff::make_Unique_food<Chef, Data>(std::forward<Args>(args)...);
     ff::Unique_food<Chef, Data> sign_moved = std::move(sign_strong);
-    [[maybe_unused]] ff::Weak_const_food<Chef, Data> sign_weak = sign_moved.as_Weak_const_food();
+    ff::Weak_const_food<Chef, Data> sign_weak = sign_moved.as_Weak_const_food();
     ff::Unique_Flat<Chef> flat = ff::Unique_Flat<Chef>(std::move(sign_moved));
     const My_Chef::Interface_const * itw = ff::reference_Unique_Flat_to_Interface_const(&flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
+    printf("original   data: ");
     itw->print_data();
     My_Chef::Interface_mut * itm = ff::reference_Unique_Flat_to_Interface_mut(&flat);
+    printf("manipluating\n");
     itm->manipulate();
+    printf("new        data: ");
     itm->print_data();
+    printf("Weak_const_food: "); // Weak_const_food might implement data as a copy OR a pointer to the original data, so it may or may have not changed. It is not safe to manipulate the food Weak_const_food is referencing
+    sign_weak.print_data();
     ff::Weak_mut_food<Chef, Data> wmf = ff::reference_Unique_Flat_to_Weak_mut_food<Chef, Data>(&flat);
     wmf.manipulate();
     wmf.print_data();
+    printf("\n");
     return true;
 }
 
@@ -215,6 +225,18 @@ bool vector_test()
         itm->print_data();
         itm->manipulate();
         itm->print_data();
+    }
+    for(auto & e : vec)
+    {
+        My_Chef::Interface_mut * itm = ff::reference_Unique_Flat_to_Interface_mut(&e);
+        ff::Unique_Flat<My_Chef> c = itm->clone();
+        My_Chef::Interface_mut * ci = ff::reference_Unique_Flat_to_Interface_mut(&c);
+        assert(itm->equals_food(ci));
+        if(c.has_alternative<tiles::Switch>())
+        {
+            c.get_data_mut<tiles::Switch>()->on = !c.get_data_mut<tiles::Switch>()->on;
+            assert(!itm->equals_food(ci));
+        }
     }
 
     return true;
