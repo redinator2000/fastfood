@@ -24,13 +24,13 @@ concept Data_Dynamic =
 using Data_Alias = Trivial_Alias;
 
 template <typename Chef>
-class Unique_Flat;
+class Unique_flat;
 
 template <typename Chef>
 struct Chef_Base_const
 {
     virtual bool equals_food(const Chef_Base_const *) const = 0;
-    virtual Unique_Flat<Chef> clone() const = 0;
+    virtual Unique_flat<Chef> clone() const = 0;
 };
 template <typename Chef_Interface_const>
 struct Chef_Base_mut : public Chef_Interface_const
@@ -75,7 +75,7 @@ namespace impl
                 return *td == *od;
             }
         }
-        Unique_Flat<Chef> clone() const override;
+        Unique_flat<Chef> clone() const override;
     };
     template <typename Chef, typename Impl_Parent, typename Data>
     struct Chef_Implementer_mut : public Chef_Implementer_const<Chef, Impl_Parent, Data>

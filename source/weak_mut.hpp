@@ -22,12 +22,12 @@ public:
         { return data; }
 };
 template <typename Chef, typename Data>
-Weak_mut_food<Chef, Data> reference_Unique_food_to_Weak_mut_food(Unique_food<Chef, Data> * uf)
+Weak_mut_food<Chef, Data> as_interface(Unique_food<Chef, Data> * uf)
 {
     return Weak_mut_food<Chef, Data>(uf->get_data_mut());
 }
 template <typename Chef, typename Data>
-Weak_mut_food<Chef, Data> reference_Unique_Flat_to_Weak_mut_food(Unique_Flat<Chef> * uf)
+Weak_mut_food<Chef, Data> as_interface(Unique_flat<Chef> * uf)
 {
     assert(uf->template has_alternative<Data>());
     return Weak_mut_food<Chef, Data>(uf->template get_data_mut<Data>());
