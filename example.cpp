@@ -92,9 +92,6 @@ namespace tiles
     };
 }
 
-template <typename Data>
-struct My_Chef_Implement_Const;
-
 struct My_Chef
 {
     struct Interface_const : public ff::Chef_Base_const<My_Chef>
