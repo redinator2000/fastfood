@@ -10,7 +10,7 @@ Intended for storing lots of small (<= 8 bytes) types in a contiguous array, wit
 
   User implemented types that can hold any data. If trivially copyable and <= 8 bytes, it will be stored in-place instead of being dynamically allocated.
   
-  If you want to check if a `Data` type will take advantage of fastfood small optimizations, use `static_assert( ! ff::Data_Dynamic<my_small_type>)`. Large types will by dynamically allocated `static_assert(ff::Data_Dynamic<my_big_type>)`.
+  If you want to check if a `Data` type will take advantage of fastfood small optimizations, use `static_assert( ! ff::Data_Dynamic<my_small_type>)`. Large types will be dynamically allocated `static_assert(ff::Data_Dynamic<my_big_type>)`.
   
   These types cannot have any virtual methods (otherwise there's no point to using fastfood fat pointers).
   
