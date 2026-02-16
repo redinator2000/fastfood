@@ -219,6 +219,8 @@ bool vector_test()
     vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Sign>("hello vec"));
     vec.emplace_back(ff::make_Unique_food<My_Chef, tiles::Tracker_Toy>(5));
 
+    static_assert( ! ff::Data_Dynamic<tiles::Stone>);
+
     for(auto & e : vec)
     {
         My_Chef::Interface_mut * itm = ff::as_interface(&e);
@@ -231,6 +233,8 @@ bool vector_test()
         My_Chef::Interface_const * itm = ff::as_interface(&e);
         ff::Unique_flat<My_Chef> c = itm->clone();
         My_Chef::Interface_mut * ci = ff::as_interface(&c);
+
+
         assert(itm->equals_food(ci));
         if(c.has_alternative<tiles::Switch>())
         {
