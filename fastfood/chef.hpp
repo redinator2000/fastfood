@@ -10,16 +10,23 @@ namespace ff
 using Trivial_Alias = intptr_t;
 
 template <typename Data>
+concept non_polymorphic =
+    !std::is_polymorphic_v<Data>;
+template <typename Data>
 concept Data_Empty =
-    std::is_empty_v<Data>;
+    (non_polymorphic<Data>
+    && std::is_empty_v<Data>);
 template <typename Data>
 concept Data_Trivial =
-    (!Data_Empty<Data>
+    (non_polymorphic<Data>
+    && !Data_Empty<Data>
     && sizeof(Data) <= sizeof(Trivial_Alias)
     && std::is_trivially_copyable_v<Data>);
 template <typename Data>
 concept Data_Dynamic =
-    (!Data_Empty<Data> && !Data_Trivial<Data>);
+    (non_polymorphic<Data>
+    && !Data_Empty<Data>
+    && !Data_Trivial<Data>);
 
 using Data_Alias = Trivial_Alias;
 
@@ -45,7 +52,7 @@ namespace impl
         virtual void reset() = 0;
     };
 
-    template <typename Chef, typename Impl_Parent, typename Data>
+    template <typename Chef, typename Impl_Parent, non_polymorphic Data>
     struct Chef_Implementer_const : public Impl_Parent
     {
         virtual const Data * get_data() const = 0;
@@ -83,21 +90,21 @@ namespace impl
             }
         }
     };
-    template <typename Chef, typename Impl_Parent, typename Data>
+    template <typename Chef, typename Impl_Parent, non_polymorphic Data>
     struct Chef_Implementer_mut : public Chef_Implementer_const<Chef, Impl_Parent, Data>
     {
         virtual Data * get_data_mut() = 0;
     };
-    template <typename Chef, typename Impl_Parent, typename Data>
+    template <typename Chef, typename Impl_Parent, non_polymorphic Data>
     struct Chef_Implementer_own : public Chef_Implementer_mut<Chef, Impl_Parent, Data>
     {
     };
 
-    template <typename Chef, typename Data>
+    template <typename Chef, non_polymorphic Data>
     using Container_Parent_const = typename Chef::Implement_const<Chef_Implementer_const<Chef, typename Chef::Interface_const, Data>, Data>;
-    template <typename Chef, typename Data>
+    template <typename Chef, non_polymorphic Data>
     using Container_Parent_mut = typename Chef::Implement_mut<Chef_Implementer_mut<Chef, typename Chef::Interface_mut, Data>, Data>;
-    template <typename Chef, typename Data>
+    template <typename Chef, non_polymorphic Data>
     using Container_Parent_own = typename Chef::Implement_mut<Chef_Implementer_own<Chef, Chef_Base_own<typename Chef::Interface_mut>, Data>, Data>;
 
     template <typename T>
@@ -114,7 +121,7 @@ namespace impl
     }
 } // namespace ipml
 
-template <typename Chef, typename Data>
+template <typename Chef, non_polymorphic Data>
 struct Weak_const_food;
 
 }; // namespace ff

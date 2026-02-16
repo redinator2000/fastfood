@@ -46,7 +46,6 @@ struct Tracker {
     bool operator==(const Tracker &) const = default;
 };
 
-
 #include <array>
 namespace tiles
 {
@@ -185,7 +184,7 @@ bool blender_test(Args&&... args)
     printf("testing id:%ld name:%s\n", tile_id<Chef, Data>, Data::name());
     ff::Unique_food<Chef, Data> sign_strong = ff::make_Unique_food<Chef, Data>(std::forward<Args>(args)...);
     ff::Unique_food<Chef, Data> sign_moved = std::move(sign_strong);
-    ff::Weak_const_food<Chef, Data> sign_weak = sign_moved.as_Weak_const_food();
+    ff::Weak_const_food<Chef, Data> sign_weak = ff::Weak_const_food<Chef, Data>(sign_moved);
     ff::Unique_flat<Chef> flat = ff::Unique_flat<Chef>(std::move(sign_moved));
     const My_Chef::Interface_const * itw = ff::as_interface(&flat);
     [[maybe_unused]] Data * casted_data_p = ff::flat_cast<Data>(&flat);
@@ -200,7 +199,7 @@ bool blender_test(Args&&... args)
     itm->print_data();
     printf("Weak_const_food: "); // Weak_const_food might implement data as a copy OR a pointer to the original data, so it may or may have not changed. It is not safe to manipulate the food Weak_const_food is referencing
     sign_weak.print_data();
-    ff::Weak_mut_food<Chef, Data> wmf = ff::as_interface<Chef, Data>(&flat);
+    ff::Weak_mut_food<Chef, Data> wmf = ff::Weak_mut_food<Chef, Data>(flat);
     printf("manipulating through Weak_mut_food\n");
     wmf.manipulate();
     printf("mainipulated   : ");

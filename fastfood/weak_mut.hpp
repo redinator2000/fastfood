@@ -6,7 +6,7 @@
 namespace ff
 {
 
-template <typename Chef, typename Data>
+template <typename Chef, non_polymorphic Data>
 class Weak_mut_food : public impl::Container_Parent_mut<Chef, Data>
 {
 private:
@@ -16,22 +16,23 @@ public:
     Weak_mut_food(Data * n_data) :
         data(n_data)
         {}
+    Weak_mut_food(Unique_food<Chef, Data> & uf) :
+        data(uf.get_data_mut())
+        {}
+    Weak_mut_food(Unique_food<Chef, Data> * uf) :
+        data(uf ? uf->get_data_mut() : nullptr)
+        {}
+    Weak_mut_food(Unique_flat<Chef> & uf) :
+        data(flat_cast<Data>(&uf))
+        {}
+    Weak_mut_food(Unique_flat<Chef> * uf) :
+        data(flat_cast<Data>(uf))
+        {}
     const Data * get_data() const override
         { return data; }
     Data * get_data_mut() override
         { return data; }
 };
-template <typename Chef, typename Data>
-Weak_mut_food<Chef, Data> as_interface(Unique_food<Chef, Data> * uf)
-{
-    return Weak_mut_food<Chef, Data>(flat_cast<Data>(uf));
-}
-template <typename Chef, typename Data>
-Weak_mut_food<Chef, Data> as_interface(Unique_flat<Chef> * uf)
-{
-    assert(uf->template has_alternative<Data>());
-    return Weak_mut_food<Chef, Data>(flat_cast<Data>(uf));
-}
 
 };
 

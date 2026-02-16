@@ -6,7 +6,10 @@
 namespace ff
 {
 
-template <typename Chef, typename Data>
+template <typename Chef>
+class Unique_flat;
+
+template <typename Chef, non_polymorphic Data>
 struct Unique_food;
 
 template <typename Chef, Data_Empty Data>
@@ -17,19 +20,18 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     Data * get_data_mut() override
         { return nullptr; }
 
-
     Unique_food()
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 1 * sizeof(void*));
     }
-    Weak_const_food<Chef, Data> as_Weak_const_food()
-        { return Weak_const_food<Chef, Data>(); }
     void reset() override
         {}
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;
     Unique_food(Unique_food && other) noexcept = default;
     Unique_food& operator=(Unique_food && other) noexcept = default;
+
+    explicit Unique_food(Unique_flat<Chef> &&);
 };
 
 template <typename Chef, Data_Trivial Data>
@@ -49,7 +51,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     explicit Unique_food(Data n_data) :
         data(n_data)
         {}
-    explicit Unique_food(Data_Alias da) :
+    explicit Unique_food(Trivial_Alias da) :
         data_alias(da)
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 2 * sizeof(void*));
@@ -57,13 +59,12 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     void reset() override
         { data_alias = 0; }
 
-    Weak_const_food<Chef, Data> as_Weak_const_food()
-        { return Weak_const_food<Chef, Data>(data); }
-
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;
     Unique_food(Unique_food && other) noexcept = default;
     Unique_food& operator=(Unique_food && other) noexcept = default;
+
+    explicit Unique_food(Unique_flat<Chef> &&);
 };
 
 template <typename Chef, Data_Dynamic Data>
@@ -78,9 +79,6 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     void reset() override
         { data.reset(); }
 
-    Weak_const_food<Chef, Data> as_Weak_const_food()
-        { return Weak_const_food<Chef, Data>(this->data.get()); }
-
     Unique_food() = default;
     Unique_food(std::unique_ptr<Data> && n_data) :
         data(std::move(n_data))
@@ -89,6 +87,8 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     Unique_food & operator=(const Unique_food & other) = delete;
     Unique_food(Unique_food && other) noexcept = default;
     Unique_food& operator=(Unique_food && other) noexcept = default;
+
+    explicit Unique_food(Unique_flat<Chef> &&);
 };
 
 template <typename Chef, Data_Empty Data, typename... Args>

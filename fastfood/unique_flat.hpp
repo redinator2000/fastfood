@@ -12,7 +12,7 @@ class Unique_flat;
 namespace impl
 {
     struct Unique_food_Vtable { virtual void dont_instantiate() = 0; };
-    template <typename Chef, typename Data>
+    template <typename Chef, non_polymorphic Data>
     const Unique_food_Vtable * unique_food_vtable_ripper()
     {
         return static_cast<Unique_food_Vtable *>(vtable_ripper<Unique_food<Chef, Data>>());
@@ -51,7 +51,7 @@ public:
 
     bool has_value() const
         { return unique_food_vtable && as_interface(this)->has_value(); }
-    template <typename Data>
+    template <non_polymorphic Data>
     bool has_alternative() const
         { return unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>(); }
 
@@ -120,8 +120,9 @@ Data * flat_cast(Unique_flat<Chef> * uf) noexcept
     return nullptr;
 }
 template <Data_Empty Data, typename Chef>
-Data & flat_cast(Unique_flat<Chef> &)
+Data & flat_cast(Unique_flat<Chef> & uf)
 {
+    assert(uf.template has_alternative<Data>());
     static Data empty_temp;
     return empty_temp;
 }
@@ -135,6 +136,7 @@ Data * flat_cast(Unique_flat<Chef> * uf) noexcept
 template <Data_Trivial Data, typename Chef>
 Data & flat_cast(Unique_flat<Chef> & uf)
 {
+    assert(uf.template has_alternative<Data>());
     return *reinterpret_cast<Data *>(&uf.data_alias);
 }
 template <Data_Dynamic Data, typename Chef>
@@ -147,6 +149,7 @@ Data * flat_cast(Unique_flat<Chef> * uf) noexcept
 template <Data_Dynamic Data, typename Chef>
 Data & flat_cast(Unique_flat<Chef> & uf)
 {
+    assert(uf.template has_alternative<Data>() && uf.data_alias != 0);
     return *reinterpret_cast<Data *>(uf.data_alias);
 }
 
@@ -159,8 +162,9 @@ const Data * flat_cast(const Unique_flat<Chef> * uf) noexcept
     return nullptr;
 }
 template <Data_Empty Data, typename Chef>
-const Data & flat_cast(const Unique_flat<Chef> &)
+const Data & flat_cast(const Unique_flat<Chef> & uf)
 {
+    assert(uf.template has_alternative<Data>());
     static Data empty_temp;
     return empty_temp;
 }
@@ -174,6 +178,7 @@ const Data * flat_cast(const Unique_flat<Chef> * uf) noexcept
 template <Data_Trivial Data, typename Chef>
 const Data & flat_cast(const Unique_flat<Chef> & uf)
 {
+    assert(uf.template has_alternative<Data>());
     return reinterpret_cast<Data>(uf.data_alias);
 }
 template <Data_Dynamic Data, typename Chef>
@@ -186,6 +191,7 @@ const Data * flat_cast(const Unique_flat<Chef> * uf) noexcept
 template <Data_Dynamic Data, typename Chef>
 const Data & flat_cast(const Unique_flat<Chef> & uf)
 {
+    assert(uf->template has_alternative<Data>() && uf.data_alias != 0);
     return *reinterpret_cast<Data *>(&uf.data_alias);
 }
 
@@ -200,9 +206,34 @@ const Chef::Interface_const * as_interface(const Unique_flat<Chef> * tf)
     return reinterpret_cast<const Chef::Interface_const *>(tf);
 }
 
+template <typename Chef, Data_Empty Data>
+Unique_food<Chef, Data>::Unique_food(Unique_flat<Chef> && uf) :
+    Unique_food()
+{
+    assert((uf.unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>()));
+    uf.unique_food_vtable = 0;
+    uf.data_alias = 0;
+}
+template <typename Chef, Data_Trivial Data>
+Unique_food<Chef, Data>::Unique_food(Unique_flat<Chef> && uf) :
+    Unique_food(uf.data_alias)
+{
+    assert((uf.unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>()));
+    uf.unique_food_vtable = 0;
+    uf.data_alias = 0;
+}
+template <typename Chef, Data_Dynamic Data>
+Unique_food<Chef, Data>::Unique_food(Unique_flat<Chef> && uf) :
+    Unique_food(std::unique_ptr(reinterpret_cast<Data *>(uf.data_alias)))
+{
+    assert((uf.unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>()));
+    uf.unique_food_vtable = 0;
+    uf.data_alias = 0;
+}
+
 namespace impl
 {
-    template <typename Chef, typename Impl_Parent, typename Data>
+    template <typename Chef, typename Impl_Parent, non_polymorphic Data>
     Unique_flat<Chef> Chef_Implementer_const<Chef, Impl_Parent, Data>::clone() const
     {
         if constexpr (Data_Empty<Data>)
