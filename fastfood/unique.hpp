@@ -24,7 +24,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     }
     Weak_const_food<Chef, Data> as_Weak_const_food()
         { return Weak_const_food<Chef, Data>(); }
-    void delete_data() override
+    void reset() override
         {}
     Unique_food(const Unique_food & other) = delete;
     Unique_food & operator=(const Unique_food & other) = delete;
@@ -54,7 +54,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     {
         static_assert(sizeof(Unique_food<Chef, Data>) == 2 * sizeof(void*));
     }
-    void delete_data() override
+    void reset() override
         { data_alias = 0; }
 
     Weak_const_food<Chef, Data> as_Weak_const_food()
@@ -75,7 +75,7 @@ struct Unique_food<Chef, Data> : public impl::Container_Parent_own<Chef, Data>
     Data * get_data_mut() override
         { return data.get(); }
 
-    void delete_data() override
+    void reset() override
         { data.reset(); }
 
     Weak_const_food<Chef, Data> as_Weak_const_food()

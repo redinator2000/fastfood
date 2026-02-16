@@ -24,13 +24,13 @@ public:
 template <typename Chef, typename Data>
 Weak_mut_food<Chef, Data> as_interface(Unique_food<Chef, Data> * uf)
 {
-    return Weak_mut_food<Chef, Data>(uf->get_data_mut());
+    return Weak_mut_food<Chef, Data>(flat_cast<Data>(uf));
 }
 template <typename Chef, typename Data>
 Weak_mut_food<Chef, Data> as_interface(Unique_flat<Chef> * uf)
 {
     assert(uf->template has_alternative<Data>());
-    return Weak_mut_food<Chef, Data>(uf->template get_data_mut<Data>());
+    return Weak_mut_food<Chef, Data>(flat_cast<Data>(uf));
 }
 
 };

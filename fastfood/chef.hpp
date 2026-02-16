@@ -31,6 +31,7 @@ struct Chef_Base_const
 {
     virtual bool equals_food(const Chef_Base_const *) const = 0;
     virtual Unique_flat<Chef> clone() const = 0;
+    virtual bool has_value() const = 0;
 };
 template <typename Chef_Interface_const>
 struct Chef_Base_mut : public Chef_Interface_const
@@ -41,7 +42,7 @@ namespace impl
     template <typename Chef_Interface_mut>
     struct Chef_Base_own : public Chef_Interface_mut
     {
-        virtual void delete_data() = 0;
+        virtual void reset() = 0;
     };
 
     template <typename Chef, typename Impl_Parent, typename Data>
@@ -49,6 +50,12 @@ namespace impl
     {
         virtual const Data * get_data() const = 0;
 
+        Unique_flat<Chef> clone() const override;
+
+        bool has_value() const override
+        {
+            return bool(this->get_data());
+        }
         bool equals_food(const Chef_Base_const<Chef> * other_base) const override
         {
             if(other_base == this)
@@ -75,7 +82,6 @@ namespace impl
                 return *td == *od;
             }
         }
-        Unique_flat<Chef> clone() const override;
     };
     template <typename Chef, typename Impl_Parent, typename Data>
     struct Chef_Implementer_mut : public Chef_Implementer_const<Chef, Impl_Parent, Data>

@@ -188,6 +188,8 @@ bool blender_test(Args&&... args)
     ff::Weak_const_food<Chef, Data> sign_weak = sign_moved.as_Weak_const_food();
     ff::Unique_flat<Chef> flat = ff::Unique_flat<Chef>(std::move(sign_moved));
     const My_Chef::Interface_const * itw = ff::as_interface(&flat);
+    [[maybe_unused]] Data * casted_data_p = ff::flat_cast<Data>(&flat);
+    [[maybe_unused]] Data & casted_data_r = ff::flat_cast<Data>(flat);
     printf("flat  id:%ld name:%s\n", itw->id_get(), itw->name());
     printf("original   data: ");
     itw->print_data();
@@ -233,7 +235,7 @@ bool vector_test()
         assert(itm->equals_food(ci));
         if(c.has_alternative<tiles::Switch>())
         {
-            c.get_data_mut<tiles::Switch>()->on = !c.get_data_mut<tiles::Switch>()->on;
+            ff::flat_cast<tiles::Switch>(c).on = !ff::flat_cast<tiles::Switch>(c).on;
             assert(!itm->equals_food(ci));
         }
     }

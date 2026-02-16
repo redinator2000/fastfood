@@ -37,63 +37,29 @@ private:
         {}
 public:
     template <Data_Empty Data>
-    Unique_flat(Unique_food<Chef, Data> &&) :
+    explicit Unique_flat(Unique_food<Chef, Data> &&) :
         Unique_flat(impl::unique_food_vtable_ripper<Chef, Data>(), 0)
         {}
     template <Data_Trivial Data>
-    Unique_flat(Unique_food<Chef, Data> && ts) :
+    explicit Unique_flat(Unique_food<Chef, Data> && ts) :
         Unique_flat(impl::unique_food_vtable_ripper<Chef, Data>(), ts.data_alias)
         {}
     template <Data_Dynamic Data>
-    Unique_flat(Unique_food<Chef, Data> && ts) :
+    explicit Unique_flat(Unique_food<Chef, Data> && ts) :
         Unique_flat(impl::unique_food_vtable_ripper<Chef, Data>(), reinterpret_cast<Data_Alias>(ts.data.release()))
         {}
 
+    bool has_value() const
+        { return unique_food_vtable && as_interface(this)->has_value(); }
     template <typename Data>
     bool has_alternative() const
         { return unique_food_vtable == impl::unique_food_vtable_ripper<Chef, Data>(); }
-    template <Data_Empty Data>
-    Data * get_data_mut()
-    {
-        assert(has_alternative<Data>());
-        return reinterpret_cast<Data *>(&data_alias);
-    }
-    template <Data_Empty Data>
-    const Data * get_data() const
-    {
-        assert(has_alternative<Data>());
-        return reinterpret_cast<Data *>(&data_alias);
-    }
-    template <Data_Trivial Data>
-    Data * get_data_mut()
-    {
-        assert(has_alternative<Data>());
-        return reinterpret_cast<Data *>(&data_alias);
-    }
-    template <Data_Trivial Data>
-    const Data * get_data() const
-    {
-        assert(has_alternative<Data>());
-        return reinterpret_cast<Data *>(&data_alias);
-    }
-    template <Data_Dynamic Data>
-    Data * get_data_mut()
-    {
-        assert(has_alternative<Data>());
-        return reinterpret_cast<Data *>(data_alias);
-    }
-    template <Data_Dynamic Data>
-    const Data * get_data() const
-    {
-        assert(has_alternative<Data>());
-        return reinterpret_cast<Data *>(data_alias);
-    }
 
     ~Unique_flat()
     {
         if(data_alias)
         {
-            impl::reference_Unique_flat_to_Interface_own<Chef>(this)->delete_data();
+            impl::reference_Unique_flat_to_Interface_own<Chef>(this)->reset();
             assert(data_alias == 0);
         }
     }
@@ -109,7 +75,7 @@ public:
     {
         if(data_alias)
         {
-            impl::reference_Unique_flat_to_Interface_own<Chef>(this)->delete_data();
+            impl::reference_Unique_flat_to_Interface_own<Chef>(this)->reset();
             assert(data_alias == 0);
         }
         this->unique_food_vtable = other->unique_food_vtable;
@@ -117,7 +83,111 @@ public:
         other.unique_food_vtable = nullptr;
         other.data_alias = 0;
     }
+
+    template <Data_Empty Data, typename fChef>
+    friend Data * flat_cast(Unique_flat<fChef> *) noexcept;
+    template <Data_Empty Data, typename fChef>
+    friend Data & flat_cast(Unique_flat<fChef> &);
+    template <Data_Trivial Data, typename fChef>
+    friend Data * flat_cast(Unique_flat<fChef> *) noexcept;
+    template <Data_Trivial Data, typename fChef>
+    friend Data & flat_cast(Unique_flat<fChef> &);
+    template <Data_Dynamic Data, typename fChef>
+    friend Data * flat_cast(Unique_flat<fChef> *) noexcept;
+    template <Data_Dynamic Data, typename fChef>
+    friend Data & flat_cast(Unique_flat<fChef> &);
+
+    template <Data_Empty Data, typename fChef>
+    friend const Data * flat_cast(const Unique_flat<fChef> *) noexcept;
+    template <Data_Empty Data, typename fChef>
+    friend const Data & flat_cast(const Unique_flat<fChef> &);
+    template <Data_Trivial Data, typename fChef>
+    friend const Data * flat_cast(const Unique_flat<fChef> *) noexcept;
+    template <Data_Trivial Data, typename fChef>
+    friend const Data & flat_cast(const Unique_flat<fChef> &);
+    template <Data_Dynamic Data, typename fChef>
+    friend const Data * flat_cast(const Unique_flat<fChef> *) noexcept;
+    template <Data_Dynamic Data, typename fChef>
+    friend const Data & flat_cast(const Unique_flat<fChef> &);
 };
+
+template <Data_Empty Data, typename Chef>
+Data * flat_cast(Unique_flat<Chef> * uf) noexcept
+{
+    static Data empty_temp;
+    if(uf && uf->template has_alternative<Data>())
+        return &empty_temp;
+    return nullptr;
+}
+template <Data_Empty Data, typename Chef>
+Data & flat_cast(Unique_flat<Chef> &)
+{
+    static Data empty_temp;
+    return empty_temp;
+}
+template <Data_Trivial Data, typename Chef>
+Data * flat_cast(Unique_flat<Chef> * uf) noexcept
+{
+    if(uf && uf->template has_alternative<Data>())
+        return reinterpret_cast<Data *>(&uf->data_alias);
+    return nullptr;
+}
+template <Data_Trivial Data, typename Chef>
+Data & flat_cast(Unique_flat<Chef> & uf)
+{
+    return *reinterpret_cast<Data *>(&uf.data_alias);
+}
+template <Data_Dynamic Data, typename Chef>
+Data * flat_cast(Unique_flat<Chef> * uf) noexcept
+{
+    if(uf && uf->template has_alternative<Data>() && uf->data_alias != 0)
+        return reinterpret_cast<Data *>(uf->data_alias);
+    return nullptr;
+}
+template <Data_Dynamic Data, typename Chef>
+Data & flat_cast(Unique_flat<Chef> & uf)
+{
+    return *reinterpret_cast<Data *>(uf.data_alias);
+}
+
+template <Data_Empty Data, typename Chef>
+const Data * flat_cast(const Unique_flat<Chef> * uf) noexcept
+{
+    static Data empty_temp;
+    if(uf && uf->template has_alternative<Data>())
+        return &empty_temp;
+    return nullptr;
+}
+template <Data_Empty Data, typename Chef>
+const Data & flat_cast(const Unique_flat<Chef> &)
+{
+    static Data empty_temp;
+    return empty_temp;
+}
+template <Data_Trivial Data, typename Chef>
+const Data * flat_cast(const Unique_flat<Chef> * uf) noexcept
+{
+    if(uf && uf->template has_alternative<Data>())
+        return reinterpret_cast<Data *>(&uf->data_alias);
+    return nullptr;
+}
+template <Data_Trivial Data, typename Chef>
+const Data & flat_cast(const Unique_flat<Chef> & uf)
+{
+    return reinterpret_cast<Data>(uf.data_alias);
+}
+template <Data_Dynamic Data, typename Chef>
+const Data * flat_cast(const Unique_flat<Chef> * uf) noexcept
+{
+    if(uf && uf->template has_alternative<Data>() && uf->data_alias != 0)
+        return reinterpret_cast<Data *>(uf->data_alias);
+    return nullptr;
+}
+template <Data_Dynamic Data, typename Chef>
+const Data & flat_cast(const Unique_flat<Chef> & uf)
+{
+    return *reinterpret_cast<Data *>(&uf.data_alias);
+}
 
 template <typename Chef>
 Chef::Interface_mut * as_interface(Unique_flat<Chef> * tf)
